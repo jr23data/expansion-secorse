@@ -60,7 +60,7 @@ Antes de modelar hay que saber **qué decisión se toma, con qué datos y qué t
 - Zonas a menos de 2 km de otra sucursal (riesgo de canibalización): Z03, Z05, Z18, Z19, Z20.
 
 ## 5. Implicaciones para el diseño de la solución
-1. **No hay variable objetivo** → definimos *Valor Neto Esperado* (ver etapa 02/03).
+1. **No hay variable objetivo predefinida** -> Se crearon dos: Valor Neto Esperado (Regresi�n) y Probabilidad de �xito (Clasificaci�n). Todo consolidado en SQL Server. → definimos *Valor Neto Esperado* (ver etapa 02/03).
 2. **n=40**, señal débil → modelos simples, regularizados, validación honesta y **mostrar la incertidumbre**.
 3. **Brecha de variables** (entorno solo en zonas) → la Versión B con INEGI se justifica con evidencia.
 4. **Canibalización** debe modelarse con cuidado por el problema de `nearest_store_id`.
