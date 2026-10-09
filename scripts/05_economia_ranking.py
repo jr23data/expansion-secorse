@@ -13,14 +13,44 @@ RAMP_UP_PROMEDIO_ANO1 = 0.75 # (arranca al 50% mes 1, llega al 100% mes 12)
 LIMITE_VARIANZA_ZONA = 0.25  # ±25% de ajuste máximo por microlocalización
 
 def run_economic_ranking():
-    # 1. Cargar Datos
+    # 1. Cargar Zonas Candidatas
     zonas = pd.read_csv('data/raw/zonas_candidatas.csv')
-    sucursales = pd.read_csv('data/raw/sucursales.csv')
-    transacciones = pd.read_csv('data/raw/transacciones.csv')
     
-    # 2. Calcular Ventas Promedio por Ciudad (El Baseline Macrolocal)
-    ventas_ciudad = sucursales.groupby('city')['avg_monthly_sales'].mean().reset_index()
-    ventas_ciudad.rename(columns={'avg_monthly_sales': 'baseline_city_sales'}, inplace=True)
+    # 2. Obtener el Baseline de Ciudad (Conexión Empresarial a SQL Server)
+    ventas_ciudad = None
+    
+    try:
+        from sqlalchemy import create_engine
+        from dotenv import load_dotenv
+        import os
+        import pyodbc
+        
+        load_dotenv()
+        server = os.getenv('DB_SERVER', 'localhost')
+        
+        # Buscar driver dinámico
+        drivers = [d for d in pyodbc.drivers() if 'SQL Server' in d or 'SQL' in d]
+        modern_drivers = [d for d in drivers if '17' in d or '18' in d or 'Native' in d]
+        driver = modern_drivers[-1] if modern_drivers else ('SQL Server' if drivers else None)
+        
+        if driver:
+            driver_url = driver.replace(' ', '+')
+            engine_url = f"mssql+pyodbc://@{server}/SECORSE_Expansion?driver={driver_url}&Trusted_Connection=yes"
+            engine = create_engine(engine_url)
+            
+            # El motor de SQL hace el cómputo masivo y nos devuelve solo el agregado
+            ventas_ciudad = pd.read_sql("SELECT city, baseline_city_sales FROM vw_Features_MachineLearning", engine)
+            print("[EXITO] INFO: Baseline macro extraído exitosamente desde SQL Server (Data Warehouse).")
+    except Exception as e:
+        print(f"[AVISO] No se pudo conectar a SQL Server ({e}). Fallback a procesamiento en memoria con Pandas.")
+        ventas_ciudad = None
+
+    # Fallback (Si SQL Server falla o no está configurado, calculamos en Pandas)
+    if ventas_ciudad is None:
+        sucursales = pd.read_csv('data/raw/sucursales.csv')
+        ventas_ciudad = sucursales.groupby('city')['avg_monthly_sales'].mean().reset_index()
+        ventas_ciudad.rename(columns={'avg_monthly_sales': 'baseline_city_sales'}, inplace=True)
+        print("[INFO] Baseline macro calculado en memoria desde CSV local.")
     
     # 3. Cruzar zonas candidatas con su baseline de ciudad
     df = zonas.merge(ventas_ciudad, on='city', how='left')
