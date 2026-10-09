@@ -153,22 +153,22 @@ def crear_presentacion(version="A"):
     # ----------------------------------------------------
     slide_layout = prs.slide_layouts[1]
     slide = prs.slides.add_slide(slide_layout)
-    slide.shapes.title.text = "Visión Productiva (Infraestructura y Despliegue)"
+    slide.shapes.title.text = "Arquitectura End-to-End (Ecosistema Azure)"
     
     tf = slide.shapes.placeholders[1].text_frame
-    tf.text = "Escalabilidad dentro del ecosistema Microsoft de SECORSE:"
+    tf.text = "Ciclo de vida completo del dato, desde la ingesta hasta la inferencia:"
     
     p = tf.add_paragraph()
-    p.text = "• Repositorio y Versionado: Git y GitHub para control estricto de experimentos."
+    p.text = "• Ingesta (Data Engineering): Pipeline automatizado (SQLAlchemy) que consolida datos crudos hacia un Data Warehouse en SQL Server."
     p.level = 1
     p = tf.add_paragraph()
-    p.text = "• MLOps (Azure Machine Learning + MLflow): Orquestación del pipeline, registro de métricas de modelos y control de ciclo de vida del modelo."
+    p.text = "• Orquestación (MLOps): Azure ML se alimenta de Vistas Analíticas de SQL, controlando el entrenamiento y versionado con MLflow."
     p.level = 1
     p = tf.add_paragraph()
-    p.text = "• Contenedores (Docker): Estandarización de ambientes, listo para despliegue en Azure Container Instances (ACI) o AKS como un servicio REST API (FastAPI) para ingestar nuevas zonas."
+    p.text = "• Despliegue (Model Serving): El modelo se contenedoriza en Docker y se expone vía FastAPI para integraciones y tableros de Power BI."
     p.level = 1
     p = tf.add_paragraph()
-    p.text = "• Consumo y Visualización: Modelos expuestos nativamente hacia Power BI mediante conectores de Azure para consumo de la dirección."
+    p.text = "• Resiliencia Operativa: Mecanismo 'Fallback'; si la BDD presenta intermitencia, el sistema procesa en memoria local sin detenerse."
     p.level = 1
 
     # Guardar
