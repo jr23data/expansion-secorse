@@ -120,7 +120,6 @@ def generar_graficas():
     plt.ylabel('Error WAPE (%) - Menor es Mejor')
     plt.ylim(10, 18)
     
-    # Añadir las etiquetas numéricas
     for barra in barras:
         yval = barra.get_height()
         plt.text(barra.get_x() + barra.get_width()/2, yval + 0.2, f'{yval}%', ha='center', fontweight='bold')
@@ -128,7 +127,50 @@ def generar_graficas():
     plt.tight_layout()
     plt.savefig(out_dir + '7_mejora_wape.png', dpi=300)
 
-    print("Las 7 gráficas se generaron correctamente en la carpeta entregables/graficas/")
+    # ==========================================
+    # PARTE 3: EVALUACIÓN DE CLASIFICACIÓN (RIESGO)
+    # ==========================================
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import confusion_matrix, roc_curve, auc
+    from sklearn.model_selection import cross_val_predict
+
+    # Crear Target Binario para graficar
+    umbral = y_true.median()
+    y_class_true = (y_true >= umbral).astype(int)
+    
+    clf = LogisticRegression(class_weight='balanced', random_state=42)
+    features_clf = ['nearby_competitors', 'distance_to_nearest_store_km']
+    X_clf = sucursales[features_clf].fillna(0)
+    
+    # Predecir Probabilidades mediante validación cruzada
+    y_class_pred_proba = cross_val_predict(clf, X_clf, y_class_true, cv=5, method='predict_proba')[:, 1]
+    y_class_pred = (y_class_pred_proba >= 0.5).astype(int)
+
+    # Gráfica 8: Matriz de Confusión
+    plt.figure(figsize=(6, 5))
+    cm = confusion_matrix(y_class_true, y_class_pred)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, annot_kws={"size": 16})
+    plt.title('Matriz de Confusión: Clasificación de Rentabilidad', pad=15)
+    plt.xlabel('Predicción del Modelo (0=Bajo, 1=Alto Potencial)')
+    plt.ylabel('Realidad Histórica (0=Bajo, 1=Alto Potencial)')
+    plt.tight_layout()
+    plt.savefig(out_dir + '8_matriz_confusion.png', dpi=300)
+
+    # Gráfica 9: Curva ROC (AUC)
+    plt.figure(figsize=(6, 5))
+    fpr, tpr, _ = roc_curve(y_class_true, y_class_pred_proba)
+    roc_auc = auc(fpr, tpr)
+    
+    plt.plot(fpr, tpr, color=COLOR_PRINCIPAL, lw=2, label=f'Curva ROC (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color=COLOR_SECUNDARIO, lw=2, linestyle='--')
+    plt.title('Curva ROC: Capacidad de Separación de Riesgo', pad=15)
+    plt.xlabel('Tasa de Falsos Positivos')
+    plt.ylabel('Tasa de Verdaderos Positivos')
+    plt.legend(loc="lower right")
+    plt.tight_layout()
+    plt.savefig(out_dir + '9_curva_roc.png', dpi=300)
+
+    print("Las 9 gráficas se generaron correctamente en la carpeta entregables/graficas/")
 
 if __name__ == '__main__':
     generar_graficas()

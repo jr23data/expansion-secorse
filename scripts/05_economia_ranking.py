@@ -82,6 +82,33 @@ def run_economic_ranking():
         lambda x: 0.15 if x <= 1.0 else (0.05 if x <= 2.0 else 0)
     )
     
+    # ---------------------------------------------------------
+    # 5.5 CAPA DE CLASIFICACIÓN (PROBABILIDAD DE ÉXITO / RIESGO)
+    # ---------------------------------------------------------
+    from sklearn.linear_model import LogisticRegression
+    
+    # Definimos el Target histórico: 1 si supera la mediana de ventas (Alta Rentabilidad), 0 si no.
+    if 'sucursales' not in locals():
+        sucursales = pd.read_csv('data/raw/sucursales.csv')
+        
+    umbral_exito = sucursales['avg_monthly_sales'].median()
+    sucursales['potencial_exito'] = (sucursales['avg_monthly_sales'] >= umbral_exito).astype(int)
+    
+    # Homologar variables (Features) entre tiendas históricas y zonas candidatas
+    sucursales['competitors_1km'] = sucursales['nearby_competitors']
+    sucursales['distance_nearest_store_km'] = sucursales['distance_to_nearest_store_km']
+    features_clf = ['competitors_1km', 'distance_nearest_store_km']
+    
+    # Entrenar Clasificador Probabilístico
+    clf = LogisticRegression(class_weight='balanced', random_state=42)
+    X_train = sucursales[features_clf].fillna(0)
+    y_train = sucursales['potencial_exito']
+    clf.fit(X_train, y_train)
+    
+    # Generar score de probabilidad para las zonas candidatas
+    X_test = df[features_clf].fillna(0)
+    df['probabilidad_exito'] = clf.predict_proba(X_test)[:, 1]
+    
     # 6. Proyección de Ventas (Expected Revenue)
     df['ventas_potenciales_mensuales'] = df['baseline_city_sales'] * (1 + df['zone_adjustment']) * (1 - df['cannibalization_penalty'])
     
@@ -96,6 +123,9 @@ def run_economic_ranking():
     
     df['vne_mensual_estabilizado'] = df['flujo_operativo_bruto'] - df['costos_operativos'] - df['renta_mensual']
     
+    # 7.5 VNE AJUSTADO POR RIESGO (La métrica maestra)
+    df['vne_ajustado_riesgo'] = df['vne_mensual_estabilizado'] * df['probabilidad_exito']
+    
     # Payback considerando Ramp-up el primer año
     df['flujo_ano_1'] = (df['vne_mensual_estabilizado'] * RAMP_UP_PROMEDIO_ANO1) * 12
     # El resto del capex por recuperar después del año 1
@@ -109,22 +139,20 @@ def run_economic_ranking():
     df['flujo_3_anos'] = df['flujo_ano_1'] + (df['vne_mensual_estabilizado'] * 24)
     df['roi_3_anos_pct'] = ((df['flujo_3_anos'] - df['capex_total']) / df['capex_total']) * 100
     
-    # 8. Ordenar y Seleccionar Top 5
-    df_ranking = df.sort_values(by='vne_mensual_estabilizado', ascending=False).head(5)
+    # 8. Ordenar y Seleccionar Top 5 (AHORA ORDENADO POR VNE AJUSTADO)
+    df_ranking = df.sort_values(by='vne_ajustado_riesgo', ascending=False).head(5)
     
-    print("\n" + "="*50)
-    print("TOP 5 ZONAS PARA EXPANSIÓN (BASADO EN VNE)")
-    print("="*50)
+    print("\n" + "="*60)
+    print("TOP 5 ZONAS PARA EXPANSIÓN (VNE AJUSTADO POR RIESGO)")
+    print("="*60)
     for index, row in df_ranking.iterrows():
         print(f"[{row['zone_id']}] {row['city']}")
         print(f"  Ventas Base (Ciudad)   : ${row['baseline_city_sales']:,.2f}")
-        print(f"  Ajuste Zona (Index)    : {row['zone_adjustment']*100:+.1f}%")
-        print(f"  Ventas Proyectadas     : ${row['ventas_potenciales_mensuales']:,.2f}")
-        print(f"  VNE (Utilidad Mensual) : ${row['vne_mensual_estabilizado']:,.2f}")
-        print(f"  Renta Mensual          : ${row['renta_mensual']:,.2f}")
+        print(f"  VNE Puro (Mensual)     : ${row['vne_mensual_estabilizado']:,.2f}")
+        print(f"  Probabilidad de Éxito  : {row['probabilidad_exito']*100:.1f}%")
+        print(f"  VNE Ajustado x Riesgo  : ${row['vne_ajustado_riesgo']:,.2f}  <-- Métrica Estrella")
         print(f"  Payback (Meses)        : {row['payback_months']:.1f} meses")
-        print(f"  ROI 3 Años             : {row['roi_3_anos_pct']:.1f}%")
-        print("-" * 50)
+        print("-" * 60)
         
     # Guardar resultados
     os.makedirs('data/processed', exist_ok=True)
