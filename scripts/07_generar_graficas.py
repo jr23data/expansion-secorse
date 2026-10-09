@@ -27,7 +27,7 @@ def generar_graficas():
     # Gráfica 1: Boxplot por Ciudades (El Baseline Macro)
     plt.figure()
     orden_ciudades = sucursales.groupby('city')['avg_monthly_sales'].median().sort_values(ascending=False).index
-    sns.boxplot(data=sucursales, x='city', y='avg_monthly_sales', order=orden_ciudades, palette="Blues_r")
+    sns.boxplot(data=sucursales, x='city', y='avg_monthly_sales', order=orden_ciudades, hue='city', palette="Blues_r", legend=False)
     plt.title('Distribución de Ventas por Ciudad (Justificación del Baseline Macro)', pad=15)
     plt.ylabel('Ventas Promedio Mensuales ($MXN)')
     plt.xlabel('Ciudad')
@@ -37,7 +37,7 @@ def generar_graficas():
 
     # Gráfica 2: Campana y Límites de Control (El Ajuste ±25%)
     plt.figure()
-    sns.histplot(sucursales['avg_monthly_sales'], kde=True, color=COLOR_PRINCIPAL, bins=15)
+    sns.histplot(sucursales['avg_monthly_sales'].dropna(), kde=True, color=COLOR_PRINCIPAL, bins=15)
     media = sucursales['avg_monthly_sales'].mean()
     std = sucursales['avg_monthly_sales'].std()
     
@@ -76,8 +76,9 @@ def generar_graficas():
     # ==========================================
     
     # Preparar una regresión rápida para generar y_pred vs y_true
-    X = sucursales[['area_m2', 'parking_spaces', 'nearby_competitors', 'distance_to_nearest_store_km']]
-    y_true = sucursales['avg_monthly_sales']
+    # Llenamos los NaNs con la mediana o ceros para que la gráfica representativa corra
+    X = sucursales[['area_m2', 'parking_spaces', 'nearby_competitors', 'distance_to_nearest_store_km']].fillna(0)
+    y_true = sucursales['avg_monthly_sales'].fillna(sucursales['avg_monthly_sales'].median())
     modelo = Ridge(alpha=1.0)
     modelo.fit(X, y_true)
     y_pred = modelo.predict(X)
