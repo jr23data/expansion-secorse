@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+mlruns/
+mlflow.db
+.env
+*.log
+data/interim/
+data/processed/
+.DS_Store

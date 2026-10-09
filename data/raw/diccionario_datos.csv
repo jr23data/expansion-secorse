@@ -1,0 +1,44 @@
+﻿tabla,campo,descripcion,tipo
+stores,store_id,Identificador de sucursal,Clave
+stores,city,Ciudad,Categórica
+stores,state,Entidad federativa,Categórica
+stores,zone_type,Tipo de zona,Categórica
+stores,opening_year,Año de apertura,Numérica
+stores,area_m2,Superficie de la sucursal,Numérica
+stores,parking_spaces,Cajones de estacionamiento,Numérica
+stores,nearby_competitors,Competidores cercanos,Numérica
+stores,distance_to_nearest_store_km,Distancia a otra sucursal,Numérica
+stores,avg_monthly_sales,Ventas mensuales promedio históricas,Numérica
+stores,avg_monthly_tickets,Tickets mensuales promedio,Numérica
+stores,avg_ticket,Ticket promedio,Numérica
+performance,store_id,Sucursal,Llave foránea
+performance,month,Mes,Fecha
+performance,sales_mxn,Ventas mensuales MXN,Numérica
+performance,tickets,Número de tickets,Numérica
+performance,avg_ticket_mxn,Ticket promedio MXN,Numérica
+zones,zone_id,Zona candidata,Clave
+zones,city,Ciudad,Categórica
+zones,zone_type,Tipo de zona,Categórica
+zones,population_1km,Población aproximada en radio 1 km,Numérica
+zones,workers_1km,Trabajadores aproximados en radio 1 km,Numérica
+zones,students_1km,Estudiantes aproximados en radio 1 km,Numérica
+zones,avg_income_index,Índice relativo de ingreso,Numérica
+zones,competitors_1km,Competidores en radio 1 km,Numérica
+zones,cafes_1km,Cafeterías en radio 1 km,Numérica
+zones,restaurants_1km,Restaurantes en radio 1 km,Numérica
+zones,transit_stations_1km,Estaciones de transporte en radio 1 km,Numérica
+zones,office_density_index,Densidad relativa de oficinas,Numérica
+zones,commercial_density_index,Densidad relativa comercial,Numérica
+zones,university_density_index,Densidad relativa universitaria,Numérica
+zones,avg_rent_mxn_m2,Renta promedio estimada por m²,Numérica
+zones,foot_traffic_index,Índice relativo de afluencia peatonal,Numérica
+zones,nearest_store_id,Sucursal más cercana,Llave foránea
+zones,distance_nearest_store_km,Distancia a sucursal más cercana,Numérica
+transactions,transaction_id,Identificador de transacción,Clave
+transactions,store_id,Sucursal,Llave foránea
+transactions,transaction_date,Fecha de transacción,Fecha
+transactions,product_category,Categoría de producto,Categórica
+transactions,channel,Canal de compra,Categórica
+transactions,payment_method,Método de pago,Categórica
+transactions,items,Número de artículos,Numérica
+transactions,ticket_mxn,Importe de ticket,Numérica
